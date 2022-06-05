@@ -37,8 +37,9 @@ $(document).ready(function () {
             contentType: false,
             type: 'POST',
             success: function (data) {
+                $('#archivo_excel').val('');
                 if (data.result == false)
-                    mensaje('Error, al importar el archivo', 'Mensaje del sistema', 'error');
+                    mensaje(data.mns, 'Mensaje del sistema', 'error');
                 else {
                     $('#tablePersonas').DataTable().ajax.reload();
                     mensaje('Importacion correcta.', 'Mensaje del sistema', 'info');
@@ -54,5 +55,6 @@ $(document).ready(function () {
             }
         });*/
         window.open('utilidad/descargarxls', '_new');
+        mensaje('Al guardar la plantilla, por favor guardarla en formato (Libro de Excel 97-2003)','Mensaje del sistema','info');
     });
 });

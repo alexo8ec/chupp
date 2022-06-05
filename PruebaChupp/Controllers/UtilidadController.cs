@@ -10,6 +10,8 @@ using System.Text;
 using NPOI.HSSF.UserModel;
 using PruebaChupp.Data;
 using PruebaChupp.Models;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace PruebaChupp.Controllers
 {
@@ -46,15 +48,15 @@ namespace PruebaChupp.Controllers
                         stream.Position = 0;
                         if (sFileExtension == ".xls")
                         {
-                            HSSFWorkbook hssfwb = new HSSFWorkbook(stream); //This will read the Excel 97-2000 formats  
-                            sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook  
+                            HSSFWorkbook hssfwb = new HSSFWorkbook(stream);
+                            sheet = hssfwb.GetSheetAt(0);
                         }
                         else
                         {
-                            XSSFWorkbook hssfwb = new XSSFWorkbook(stream); //This will read 2007 Excel format  
-                            sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
+                            XSSFWorkbook hssfwb = new XSSFWorkbook(stream);
+                            sheet = hssfwb.GetSheetAt(0);
                         }
-                        IRow headerRow = sheet.GetRow(0); //Get Header Row
+                        IRow headerRow = sheet.GetRow(0);
                         int cellCount = headerRow.LastCellNum;
                         string nombre = "";
                         string apellido = "";
@@ -65,7 +67,7 @@ namespace PruebaChupp.Controllers
                         string direccion = "";
                         string fecha_nacimiento = "";
                         int cont = 0;
-                        for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++) //Read Excel File
+                        for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
                         {
                             IRow row = sheet.GetRow(i);
                             if (row == null) continue;
@@ -79,58 +81,106 @@ namespace PruebaChupp.Controllers
                                     else if (cont == 1)
                                         apellido = row.GetCell(j).ToString();
                                     else if (cont == 2)
+                                    {
                                         cedula = row.GetCell(j).ToString();
+                                        if (cedula.Length != 10)
+                                        {
+                                            return Json(new { result = false, mns = "El número de cedula debe contener 10 digitos" });
+                                        }
+                                        else if (!esNumero(cedula))
+                                        {
+                                            return Json(new { result = false, mns = "El número de cedula deben ser solo números" });
+                                        }
+                                    }
                                     else if (cont == 3)
+                                    {
                                         telefono = row.GetCell(j).ToString();
+                                        if (telefono.Length != 9)
+                                        {
+                                            return Json(new { result = false, mns = "El número de teléfono debe contener 9 digitos" });
+                                        }
+                                        else if (!esNumero(telefono))
+                                        {
+                                            return Json(new { result = false, mns = "El número de teléfono deben ser solo números" });
+                                        }
+                                    }
                                     else if (cont == 4)
+                                    {
                                         celular = row.GetCell(j).ToString();
+                                        if (celular.Length != 10)
+                                        {
+                                            return Json(new { result = false, mns = "El número de celular debe contener 10 digitos" });
+                                        }
+                                        else if (!esNumero(celular))
+                                        {
+                                            return Json(new { result = false, mns = "El número de celular deben ser solo números" });
+                                        }
+                                    }
                                     else if (cont == 5)
+                                    {
                                         email = row.GetCell(j).ToString();
+                                        if (!esEmail(email))
+                                        {
+                                            return Json(new { result = false, mns = "Formato de E-mail incorrecto Ej: corre@dominio.com" });
+                                        }
+                                    }
                                     else if (cont == 6)
                                         direccion = row.GetCell(j).ToString();
                                     else if (cont == 7)
+                                    {
                                         fecha_nacimiento = row.GetCell(j).ToString();
-
+                                        if (!esFecha(fecha_nacimiento))
+                                        {
+                                            return Json(new { result = false, mns = "Formato de fecha incorrecto Ej: 10-09-1983 | 10/09/1983 | 1983-09-10" });
+                                        }
+                                    }
                                     cont++;
                                 }
                             }
-                            using (var db = new ChuppContext())
+                            try
                             {
-                                var query = db.personas.Where(p => p.cedula_persona == cedula).ToList();
-                                if (query.Count == 0)
+                                using (var db = new ChuppContext())
                                 {
-                                    var per = new Personas
+                                    var query = db.personas.Where(p => p.cedula_persona == cedula).ToList();
+                                    if (query.Count == 0)
                                     {
-                                        nombre_persona = nombre,
-                                        apellido_persona = apellido,
-                                        cedula_persona = cedula,
-                                        telefono_persona = telefono,
-                                        celular_persona = celular,
-                                        email_persona = email,
-                                        direccion_persona = direccion,
-                                        fecha_nacimiento_persona = Convert.ToDateTime(fecha_nacimiento),
-                                        estado_persona = 1
-                                    };
-                                    db.personas.Add(per);
-                                    if (db.SaveChanges() == 1)
-                                    {
-                                        cont = 0;
-                                        /*esta = true;
-                                        mns = "Datos guardados correctamente.";*/
+                                        var per = new Personas
+                                        {
+                                            nombre_persona = nombre,
+                                            apellido_persona = apellido,
+                                            cedula_persona = cedula,
+                                            telefono_persona = telefono,
+                                            celular_persona = celular,
+                                            email_persona = email,
+                                            direccion_persona = direccion,
+                                            fecha_nacimiento_persona = Convert.ToDateTime(fecha_nacimiento),
+                                            estado_persona = 1
+                                        };
+                                        db.personas.Add(per);
+                                        if (db.SaveChanges() == 1)
+                                        {
+                                            cont = 0;
+                                            /*esta = true;
+                                            mns = "Datos guardados correctamente.";*/
+                                        }
+                                        else
+                                        {
+                                            //mns = "Ocurrio un error al guardar los datos";
+                                        }
                                     }
                                     else
-                                    {
-                                        //mns = "Ocurrio un error al guardar los datos";
-                                    }
+                                    { return Json(new { result = false, mns = "Un número de cedula ya esta ingresada en la base" }); }
                                 }
                             }
+                            catch (Exception ex)
+                            { return Json(new { result = false, mns = ex }); }
                         }
                     }
-                    return Json(new { });
+                    return Json(new { result = true, mns = "Importacion Correcta" });
                 }
                 return this.Content(sb.ToString());
             }
-            catch (Exception ex) { return Json(new { }); }
+            catch (Exception ex) { return Json(new { result = false, mns = ex }); }
         }
         [HttpGet]
         [Route("utilidad/descargarxls")]
@@ -195,23 +245,58 @@ namespace PruebaChupp.Controllers
                 stream.CopyToAsync(memory);
             }
             memory.Position = 0;
-            //return c;
-            return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sFileName);
-            //return View("DescargaArchivo", File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sFileName));
-            //return DescargarDocumento(sFileName);
-
+            //return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sFileName);
+            byte[] fileBytes = System.IO.File.ReadAllBytes(@"Uploads/plantilla_ejemplo.xls");
+            string fileName = "plantilla_ejemplo.xls";
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
         }
-        private FileResult DescargarDocumento(string ruta)
+        private bool esNumero(string n)
+        {
+            int valor;
+            bool esNumero;
+            return int.TryParse(n, out valor);
+        }
+        private static Boolean esFecha(String fecha)
         {
             try
             {
-                byte[] fileBytes = System.IO.File.ReadAllBytes(ruta);
-                string fileName = "plantilla.xls";
-                return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                DateTime.Parse(fecha);
+                return true;
             }
-            catch (Exception ex)
+            catch
             {
-                return null;
+                return false;
+            }
+        }
+        private bool esEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+            try
+            {
+                email = Regex.Replace(email, @"(@)(.+)$", DomainMapper, RegexOptions.None, TimeSpan.FromMilliseconds(200));
+                string DomainMapper(Match match)
+                {
+                    var idn = new IdnMapping();
+                    string domainName = idn.GetAscii(match.Groups[2].Value);
+                    return match.Groups[1].Value + domainName;
+                }
+            }
+            catch (RegexMatchTimeoutException e)
+            {
+                return false;
+            }
+            catch (ArgumentException e)
+            {
+                return false;
+            }
+            try
+            {
+                return Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                return false;
             }
         }
     }

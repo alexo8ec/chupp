@@ -66,6 +66,11 @@ namespace PruebaChupp.Controllers
                                         join p in db.personas on v.id_persona_venta equals p.id_persona
                                         join r in db.rangos on v.id_rango_venta equals r.id_rango
                                         join po in db.porcentajes on v.id_porcentaje_venta equals po.id_porcentaje
+                                        where s.codigo_seguro.Contains(searchValue)
+                                       || s.nombre_seguro.Contains(searchValue)
+                                       || p.nombre_persona.Contains(searchValue)
+                                       || p.apellido_persona.Contains(searchValue)
+                                       || p.cedula_persona.Contains(searchValue)
                                         select new
                                         {
                                             id_persona = p.id_persona,

@@ -136,10 +136,8 @@ namespace PruebaChupp.Controllers
         [Route("utilidad/descargarxls")]
         public FileResult descargarxls()
         {
-            bool estado = false;
-
             string sWebRootFolder = _hostingEnvironment.WebRootPath;
-            string sFileName = @"/Uploads/plantilla.xls";
+            string sFileName = @"Uploads/plantilla_ejemplo.xls";
             string URL = string.Format("{0}://{1}/{2}", Request.Scheme, Request.Host, sFileName);
             FileInfo file = new FileInfo(sFileName);
             var memory = new MemoryStream();
@@ -191,14 +189,17 @@ namespace PruebaChupp.Controllers
 
                 workbook.Write(fs);
             }
-            using (var stream = new FileStream(Path.Combine(sWebRootFolder, sFileName), FileMode.Open))
+            var dir = "";
+            using (var stream = new FileStream(Path.Combine(dir, sFileName), FileMode.Open))
             {
                 stream.CopyToAsync(memory);
             }
             memory.Position = 0;
+            //return c;
             return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sFileName);
-            /*DescargarDocumento(sFileName);
-            return estado;*/
+            //return View("DescargaArchivo", File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sFileName));
+            //return DescargarDocumento(sFileName);
+
         }
         private FileResult DescargarDocumento(string ruta)
         {

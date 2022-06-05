@@ -31,7 +31,7 @@ $(document).ready(function () {
         var fd = new FormData();
         fd.append('archivo_excel', file);
         $.ajax({
-            url: '/utilidad/subirarchivo',
+            url: 'utilidad/subirarchivo',
             data: fd,
             processData: false,
             contentType: false,
@@ -47,11 +47,12 @@ $(document).ready(function () {
         });
     });
     $('#descargar_excel').click(function () {
-        $.ajax({
-            url: '/utilidad/descargarxls',
+        /*$.ajax({
+            url: 'utilidad/descargarxls',
             type: 'GET',
             success: function () {
             }
-        });
+        });*/
+        window.open('utilidad/descargarxls', '_new');
     });
 });
